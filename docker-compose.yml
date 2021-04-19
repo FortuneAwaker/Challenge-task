@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  producer-app:
+    image: producer-app
+    build:
+      context: producer/
+      dockerfile: Dockerfile
+    volumes:
+      - /data/producer-app-docker-compose-app
+    ports:
+      - "9090:9090"
+    depends_on:
+      - rabbitmq
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+  consumer-app:
+    image: consumer-app
+    build:
+      context: consumer/
+      dockerfile: Dockerfile
+    volumes:
+      - /data/consumer-app-docker-compose-app
+    ports:
+      - "8090:8090"
+    depends_on:
+      - rabbitmq
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+  rabbitmq:
+    image: rabbitmq:management
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+
