@@ -1,7 +1,6 @@
 package by.itechart.consumer.service;
 
 import by.itechart.consumer.entity.Booking;
-import by.itechart.consumer.entity.TripWaypoint;
 import by.itechart.consumer.exception.ResourceNotFoundException;
 import by.itechart.consumer.repository.BookingRepository;
 import by.itechart.model.dto.BookingDtoWithId;

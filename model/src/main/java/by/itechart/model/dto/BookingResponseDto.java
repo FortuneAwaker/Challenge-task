@@ -9,10 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ExceptionDto implements ResponseDto {
+public class BookingResponseDto implements ResponseDto {
 
     private Integer statusCode;
     private String message;
     private String timestamp;
+    private BookingDtoWithId bookingDtoWithId;
 
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.validation.Valid;
@@ -15,7 +14,6 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.sql.Time;
 import java.util.List;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor

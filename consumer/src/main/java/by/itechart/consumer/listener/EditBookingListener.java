@@ -3,8 +3,9 @@ package by.itechart.consumer.listener;
 import by.itechart.consumer.exception.ResourceNotFoundException;
 import by.itechart.consumer.service.BookingService;
 import by.itechart.model.dto.BookingDtoWithId;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import by.itechart.model.dto.BookingResponseDto;
+import by.itechart.model.dto.ExceptionDto;
+import by.itechart.model.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,11 +13,14 @@ import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @EnableRabbit
@@ -27,7 +31,6 @@ public class EditBookingListener {
     @Value("${rabbit.message-exchange}")
     private String messageExchangeName;
 
-    private final ObjectMapper objectMapper;
     private final BookingService bookingService;
     private final RabbitTemplate rabbitTemplate;
     private final Validator validator;
@@ -35,17 +38,24 @@ public class EditBookingListener {
     Logger logger = LoggerFactory.getLogger(EditBookingListener.class);
 
     @RabbitListener(queues = {"booking-edit-queue"})
-    public void processEditBookingQueue(final String message) {
+    public ResponseDto processEditBookingQueue(final BookingDtoWithId bookingToEdit) {
         try {
-            BookingDtoWithId parsedBooking = objectMapper.readValue(message, BookingDtoWithId.class);
-            logger.info("Validating booking with id: {}", parsedBooking.getId());
-            validateBooking(parsedBooking);
-            logger.info("Trying to edit booking with id: {}", parsedBooking.getId());
-            BookingDtoWithId updatedBooking = bookingService.editBooking(parsedBooking);
+            logger.info("Validating booking with id: {}", bookingToEdit.getId());
+            validateBooking(bookingToEdit);
+            logger.info("Trying to edit booking with id: {}", bookingToEdit.getId());
+            BookingDtoWithId updatedBooking = bookingService.editBooking(bookingToEdit);
             logger.info("Booking was updated: {}", updatedBooking);
-        } catch (JsonProcessingException | ResourceNotFoundException | ConstraintViolationException e) {
-            rabbitTemplate.convertAndSend(messageExchangeName,
-                    "exception", e.getMessage());
+            return new BookingResponseDto(HttpStatus.CREATED.value(),
+                    "Booking with id " + updatedBooking.getId() + " was edited!",
+                    Timestamp.valueOf(LocalDateTime.now()).toString(), updatedBooking);
+        } catch (ConstraintViolationException e) {
+            rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
+            return new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage(),
+                    Timestamp.valueOf(LocalDateTime.now()).toString());
+        } catch (ResourceNotFoundException e) {
+            rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
+            return new ExceptionDto(HttpStatus.NOT_FOUND.value(), e.getMessage(),
+                    Timestamp.valueOf(LocalDateTime.now()).toString());
         }
     }
 

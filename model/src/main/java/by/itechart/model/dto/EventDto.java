@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class EventDto {
+public class EventDto implements ResponseDto {
 
     private Integer statusCode;
     private String message;

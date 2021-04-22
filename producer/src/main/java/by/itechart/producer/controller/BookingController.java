@@ -2,12 +2,10 @@ package by.itechart.producer.controller;
 
 import by.itechart.model.dto.BookingDtoWithId;
 import by.itechart.model.dto.BookingDtoWithoutId;
-import by.itechart.model.dto.EventDto;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import by.itechart.model.dto.ExceptionDto;
+import by.itechart.model.dto.ResponseDto;
+import by.itechart.producer.service.BookingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -23,6 +21,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,54 +29,63 @@ import java.time.LocalDateTime;
 @Validated
 public class BookingController {
 
-    private final RabbitTemplate rabbitTemplate;
-    private final ObjectMapper objectMapper;
+    private final BookingService bookingService;
 
-    private static final String ADD_LITERAL = "add";
-    private static final String EDIT_LITERAL = "edit";
-    private static final String DELETE_LITERAL = "delete";
-    private static final String AUDIT_LITERAL = "audit";
-    @Value("${rabbit.message-exchange}")
-    private String directExchangeLiteral;
-    @Value("${rabbit.booking-exchange}")
-    private String bookingExchangeLiteral;
+    private static final String TIMEOUT_LITERAL = "Timeout: response wasn't received!";
+
 
     @PostMapping
-    public ResponseEntity<EventDto> addBooking(@Valid @RequestBody BookingDtoWithoutId bookingDtoWithoutId)
-            throws JsonProcessingException {
-        String bookingDtoJson = objectMapper.writeValueAsString(bookingDtoWithoutId);
-        rabbitTemplate.convertAndSend(bookingExchangeLiteral, ADD_LITERAL, bookingDtoJson);
-        rabbitTemplate.convertAndSend(directExchangeLiteral, AUDIT_LITERAL,
-                "Message to create booking was sent.");
-        return new ResponseEntity<>(createEventDto(HttpStatus.OK.value(),
-                "Message to add booking was sent successfully!", ADD_LITERAL), HttpStatus.OK);
+    public ResponseEntity<ResponseDto> addBooking(@Valid @RequestBody BookingDtoWithoutId bookingDtoWithoutId) {
+        ResponseDto response = bookingService.addBooking(bookingDtoWithoutId);
+        if (Objects.isNull(response)) {
+            return new ResponseEntity<>(new ExceptionDto(HttpStatus.GATEWAY_TIMEOUT.value(),
+                    TIMEOUT_LITERAL, Timestamp.valueOf(LocalDateTime.now()).toString()),
+                    HttpStatus.GATEWAY_TIMEOUT);
+        }
+        if (Objects.nonNull(checkException(response))) {
+            return checkException(response);
+        }
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventDto> editBooking(
+    public ResponseEntity<ResponseDto> editBooking(
             @PathVariable @Min(value = 1, message = "id must be more or equals 1") Long id,
-            @Valid @RequestBody BookingDtoWithId bookingDtoWithId)
-            throws JsonProcessingException {
+            @Valid @RequestBody BookingDtoWithId bookingDtoWithId) {
         bookingDtoWithId.setId(id);
-        String bookingDtoJson = objectMapper.writeValueAsString(bookingDtoWithId);
-        rabbitTemplate.convertAndSend(bookingExchangeLiteral, EDIT_LITERAL, bookingDtoJson);
-        rabbitTemplate.convertAndSend(directExchangeLiteral, AUDIT_LITERAL,
-                "Message to edit booking with id " + id + " was sent.");
-        return new ResponseEntity<>(createEventDto(HttpStatus.OK.value(),
-                "Message to edit booking was sent successfully!", EDIT_LITERAL), HttpStatus.OK);
+        ResponseDto response = bookingService.editBooking(bookingDtoWithId);
+        if (Objects.isNull(response)) {
+            return new ResponseEntity<>(new ExceptionDto(HttpStatus.GATEWAY_TIMEOUT.value(),
+                    TIMEOUT_LITERAL, Timestamp.valueOf(LocalDateTime.now()).toString()),
+                    HttpStatus.GATEWAY_TIMEOUT);
+        }
+        if (Objects.nonNull(checkException(response))) {
+            return checkException(response);
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<EventDto> deleteBooking(
+    public ResponseEntity<ResponseDto> deleteBooking(
             @PathVariable @Min(value = 1, message = "id must be more or equals 1") Long id) {
-        rabbitTemplate.convertAndSend(bookingExchangeLiteral, DELETE_LITERAL, id);
-        rabbitTemplate.convertAndSend(directExchangeLiteral, AUDIT_LITERAL,
-                "Message to delete booking with id " + id + " was sent.");
-        return new ResponseEntity<>(createEventDto(HttpStatus.OK.value(),
-                "Message to delete booking was sent successfully!", DELETE_LITERAL), HttpStatus.OK);
+        ResponseDto response = bookingService.deleteBooking(id);
+        if (Objects.isNull(response)) {
+            return new ResponseEntity<>(new ExceptionDto(HttpStatus.GATEWAY_TIMEOUT.value(),
+                    TIMEOUT_LITERAL, Timestamp.valueOf(LocalDateTime.now()).toString()),
+                    HttpStatus.GATEWAY_TIMEOUT);
+        }
+        if (Objects.nonNull(checkException(response))) {
+            return checkException(response);
+        }
+        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
     }
 
-    private EventDto createEventDto(final int statusCode, final String message, String eventType) {
-        return new EventDto(statusCode, message, Timestamp.valueOf(LocalDateTime.now()).toString(), eventType);
+    private ResponseEntity<ResponseDto> checkException(final ResponseDto responseDto) {
+        if (responseDto.getClass().equals(ExceptionDto.class)) {
+            ExceptionDto exceptionDto = (ExceptionDto) responseDto;
+            return new ResponseEntity<>(exceptionDto, HttpStatus.valueOf(exceptionDto.getStatusCode()));
+        }
+        return null;
     }
+
 }
