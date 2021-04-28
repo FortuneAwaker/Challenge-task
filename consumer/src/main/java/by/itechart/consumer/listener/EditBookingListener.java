@@ -38,7 +38,7 @@ public class EditBookingListener {
     Logger logger = LoggerFactory.getLogger(EditBookingListener.class);
 
     @RabbitListener(queues = {"booking-edit-queue"})
-    public ResponseDto processEditBookingQueue(final BookingDtoWithId bookingToEdit) {
+    public BookingResponseDto processEditBookingQueue(final BookingDtoWithId bookingToEdit) {
         try {
             logger.info("Validating booking with id: {}", bookingToEdit.getId());
             validateBooking(bookingToEdit);
@@ -50,13 +50,14 @@ public class EditBookingListener {
                     Timestamp.valueOf(LocalDateTime.now()).toString(), updatedBooking);
         } catch (ConstraintViolationException e) {
             rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
-            return new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage(),
-                    Timestamp.valueOf(LocalDateTime.now()).toString());
+//            return new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage(),
+//                    Timestamp.valueOf(LocalDateTime.now()).toString());
         } catch (ResourceNotFoundException e) {
             rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
-            return new ExceptionDto(HttpStatus.NOT_FOUND.value(), e.getMessage(),
-                    Timestamp.valueOf(LocalDateTime.now()).toString());
+//            return new ExceptionDto(HttpStatus.NOT_FOUND.value(), e.getMessage(),
+//                    Timestamp.valueOf(LocalDateTime.now()).toString());
         }
+        return new BookingResponseDto();
     }
 
     private void validateBooking(final BookingDtoWithId bookingDtoWithId) {

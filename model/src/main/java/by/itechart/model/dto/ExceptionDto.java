@@ -1,18 +1,18 @@
 package by.itechart.model.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class ExceptionDto implements ResponseDto {
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
+public class ExceptionDto extends ResponseDto {
 
-    private Integer statusCode;
-    private String message;
-    private String timestamp;
+    public ExceptionDto(final Integer statusCode, final String message, final String timestamp) {
+        super(statusCode, message, timestamp);
+    }
 
 }

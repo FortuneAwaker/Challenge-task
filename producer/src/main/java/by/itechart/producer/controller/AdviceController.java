@@ -2,6 +2,7 @@ package by.itechart.producer.controller;
 
 import by.itechart.model.dto.ExceptionDto;
 import org.springframework.amqp.AmqpConnectException;
+import org.springframework.amqp.rabbit.support.ListenerExecutionFailedException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.GATEWAY_TIMEOUT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 @ControllerAdvice
@@ -38,6 +40,15 @@ public class AdviceController extends ResponseEntityExceptionHandler {
                 new ExceptionDto(INTERNAL_SERVER_ERROR.value(), exception.getMessage(),
                         Timestamp.valueOf(LocalDateTime.now()).toString()), INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(value = {ListenerExecutionFailedException.class})
+    public ResponseEntity<ExceptionDto> handleListenerExecutionFailedException(
+            final ListenerExecutionFailedException exception) {
+        return new ResponseEntity<>(
+                new ExceptionDto(GATEWAY_TIMEOUT.value(), exception.getMessage(),
+                        Timestamp.valueOf(LocalDateTime.now()).toString()), GATEWAY_TIMEOUT);
+    }
+
 
     @Override
     protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(

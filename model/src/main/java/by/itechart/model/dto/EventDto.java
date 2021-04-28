@@ -1,19 +1,21 @@
 package by.itechart.model.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class EventDto implements ResponseDto {
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
+public class EventDto extends ResponseDto {
 
-    private Integer statusCode;
-    private String message;
-    private String timestamp;
     private String eventType;
+
+    public EventDto(final Integer statusCode, final String message, final String timestamp, final String eventType) {
+        super(statusCode, message, timestamp);
+        this.eventType = eventType;
+    }
 
 }

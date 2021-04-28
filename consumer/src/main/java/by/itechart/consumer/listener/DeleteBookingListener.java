@@ -2,6 +2,7 @@ package by.itechart.consumer.listener;
 
 import by.itechart.consumer.exception.ResourceNotFoundException;
 import by.itechart.consumer.service.BookingService;
+import by.itechart.model.dto.BookingResponseDto;
 import by.itechart.model.dto.EventDto;
 import by.itechart.model.dto.ExceptionDto;
 import by.itechart.model.dto.ResponseDto;
@@ -32,7 +33,7 @@ public class DeleteBookingListener {
     Logger logger = LoggerFactory.getLogger(DeleteBookingListener.class);
 
     @RabbitListener(queues = {"booking-delete-queue"})
-    public ResponseDto processDeleteBookingQueue(final Long idOfBookingToDelete) {
+    public EventDto processDeleteBookingQueue(final Long idOfBookingToDelete) {
         try {
             logger.info("Trying to delete booking with id: {}", idOfBookingToDelete);
             bookingService.deleteBookingById(idOfBookingToDelete);
@@ -42,8 +43,9 @@ public class DeleteBookingListener {
                     Timestamp.valueOf(LocalDateTime.now()).toString(), "delete");
         } catch (ResourceNotFoundException e) {
             rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
-            return new ExceptionDto(HttpStatus.NOT_FOUND.value(), e.getMessage(),
-                    Timestamp.valueOf(LocalDateTime.now()).toString());
+//            return new ExceptionDto(HttpStatus.NOT_FOUND.value(), e.getMessage(),
+//                    Timestamp.valueOf(LocalDateTime.now()).toString());
+            return null;
         }
     }
 

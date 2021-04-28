@@ -38,7 +38,7 @@ public class AddBookingListener {
     Logger logger = LoggerFactory.getLogger(AddBookingListener.class);
 
     @RabbitListener(queues = {"booking-add-queue"})
-    public ResponseDto processAddBookingQueue(final BookingDtoWithoutId bookingToAdd) {
+    public BookingResponseDto processAddBookingQueue(final BookingDtoWithoutId bookingToAdd) {
         try {
             logger.info("Validating new booking");
             validateBooking(bookingToAdd);
@@ -49,8 +49,9 @@ public class AddBookingListener {
                     Timestamp.valueOf(LocalDateTime.now()).toString(), createdBooking);
         } catch (ConstraintViolationException e) {
             rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
-            return new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage(),
-                    Timestamp.valueOf(LocalDateTime.now()).toString());
+//            return new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage(),
+//                    Timestamp.valueOf(LocalDateTime.now()).toString());
+            return new BookingResponseDto();
         }
     }
 
@@ -60,5 +61,4 @@ public class AddBookingListener {
             throw new ConstraintViolationException(validates);
         }
     }
-
 }

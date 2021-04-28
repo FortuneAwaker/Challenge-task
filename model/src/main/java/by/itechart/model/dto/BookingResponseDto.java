@@ -1,19 +1,22 @@
 package by.itechart.model.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class BookingResponseDto implements ResponseDto {
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
+public class BookingResponseDto extends ResponseDto {
 
-    private Integer statusCode;
-    private String message;
-    private String timestamp;
     private BookingDtoWithId bookingDtoWithId;
+
+    public BookingResponseDto(final Integer statusCode, final String message, final String timestamp,
+                    final BookingDtoWithId bookingDtoWithId) {
+        super(statusCode, message, timestamp);
+        this.bookingDtoWithId = bookingDtoWithId;
+    }
 
 }

@@ -18,6 +18,8 @@ public class RabbitConfig implements WebMvcConfigurer {
     public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
         final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(producerJackson2MessageConverter());
+        rabbitTemplate.setReceiveTimeout(1000000L);
+        rabbitTemplate.setReplyTimeout(1000000L);
         return rabbitTemplate;
     }
 
