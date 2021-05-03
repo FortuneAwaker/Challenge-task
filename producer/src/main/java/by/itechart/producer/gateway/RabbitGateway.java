@@ -7,7 +7,7 @@ import by.itechart.model.dto.EventDto;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.MessagingGateway;
 
-@MessagingGateway(errorChannel = "exception")
+@MessagingGateway
 public interface RabbitGateway {
 
     @Gateway(requestChannel = "add-booking")

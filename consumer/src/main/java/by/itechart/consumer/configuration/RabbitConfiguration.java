@@ -36,6 +36,13 @@ public class RabbitConfiguration implements RabbitListenerConfigurer {
     private String messageAuditQueueName;
     @Value("${rabbit.exception-queue}")
     private String exceptionQueueName;
+    @Value("${rabbit.exception-add-queue}")
+    private String exceptionAddQueueName;
+    @Value("${rabbit.exception-edit-queue}")
+    private String exceptionEditQueueName;
+    @Value("${rabbit.exception-delete-queue}")
+    private String exceptionDeleteQueueName;
+
 
     @Bean
     public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
@@ -92,6 +99,21 @@ public class RabbitConfiguration implements RabbitListenerConfigurer {
     }
 
     @Bean
+    public Queue exceptionAddQueue() {
+        return new Queue(exceptionAddQueueName);
+    }
+
+    @Bean
+    public Queue exceptionEditQueue() {
+        return new Queue(exceptionEditQueueName);
+    }
+
+    @Bean
+    public Queue exceptionDeleteQueue() {
+        return new Queue(exceptionDeleteQueueName);
+    }
+
+    @Bean
     public DirectExchange directExchange() {
         return new DirectExchange(messageExchangeName);
     }
@@ -139,6 +161,21 @@ public class RabbitConfiguration implements RabbitListenerConfigurer {
     @Bean
     public Binding bindingException() {
         return BindingBuilder.bind(exceptionQueue()).to(directExchange()).with("exception");
+    }
+
+    @Bean
+    public Binding bindingAddException() {
+        return BindingBuilder.bind(exceptionAddQueue()).to(directExchange()).with("exception-add");
+    }
+
+    @Bean
+    public Binding bindingEditException() {
+        return BindingBuilder.bind(exceptionEditQueue()).to(directExchange()).with("exception-edit");
+    }
+
+    @Bean
+    public Binding bindingDeleteException() {
+        return BindingBuilder.bind(exceptionDeleteQueue()).to(directExchange()).with("exception-delete");
     }
 
 }

@@ -5,7 +5,6 @@ import by.itechart.model.dto.BookingDtoWithId;
 import by.itechart.model.dto.BookingDtoWithoutId;
 import by.itechart.model.dto.BookingResponseDto;
 import by.itechart.model.dto.ExceptionDto;
-import by.itechart.model.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +48,9 @@ public class AddBookingListener {
                     Timestamp.valueOf(LocalDateTime.now()).toString(), createdBooking);
         } catch (ConstraintViolationException e) {
             rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
-//            return new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage(),
-//                    Timestamp.valueOf(LocalDateTime.now()).toString());
+            rabbitTemplate.convertAndSend(messageExchangeName, "exception-add",
+                    new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage(),
+                            Timestamp.valueOf(LocalDateTime.now()).toString()));
             return new BookingResponseDto();
         }
     }

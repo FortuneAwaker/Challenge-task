@@ -2,10 +2,8 @@ package by.itechart.consumer.listener;
 
 import by.itechart.consumer.exception.ResourceNotFoundException;
 import by.itechart.consumer.service.BookingService;
-import by.itechart.model.dto.BookingResponseDto;
 import by.itechart.model.dto.EventDto;
 import by.itechart.model.dto.ExceptionDto;
-import by.itechart.model.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,9 +41,10 @@ public class DeleteBookingListener {
                     Timestamp.valueOf(LocalDateTime.now()).toString(), "delete");
         } catch (ResourceNotFoundException e) {
             rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
-//            return new ExceptionDto(HttpStatus.NOT_FOUND.value(), e.getMessage(),
-//                    Timestamp.valueOf(LocalDateTime.now()).toString());
-            return null;
+            rabbitTemplate.convertAndSend(messageExchangeName, "exception-delete",
+                    new ExceptionDto(HttpStatus.NOT_FOUND.value(), e.getMessage(),
+                            Timestamp.valueOf(LocalDateTime.now()).toString()));
+            return new EventDto();
         }
     }
 

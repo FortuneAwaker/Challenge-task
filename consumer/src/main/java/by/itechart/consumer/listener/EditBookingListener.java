@@ -5,7 +5,6 @@ import by.itechart.consumer.service.BookingService;
 import by.itechart.model.dto.BookingDtoWithId;
 import by.itechart.model.dto.BookingResponseDto;
 import by.itechart.model.dto.ExceptionDto;
-import by.itechart.model.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,12 +49,14 @@ public class EditBookingListener {
                     Timestamp.valueOf(LocalDateTime.now()).toString(), updatedBooking);
         } catch (ConstraintViolationException e) {
             rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
-//            return new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage(),
-//                    Timestamp.valueOf(LocalDateTime.now()).toString());
+            rabbitTemplate.convertAndSend(messageExchangeName, "exception-edit",
+                    new ExceptionDto(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage(),
+                            Timestamp.valueOf(LocalDateTime.now()).toString()));
         } catch (ResourceNotFoundException e) {
             rabbitTemplate.convertAndSend(messageExchangeName, "exception", e.getMessage());
-//            return new ExceptionDto(HttpStatus.NOT_FOUND.value(), e.getMessage(),
-//                    Timestamp.valueOf(LocalDateTime.now()).toString());
+            rabbitTemplate.convertAndSend(messageExchangeName, "exception-edit",
+                    new ExceptionDto(HttpStatus.NOT_FOUND.value(), e.getMessage(),
+                            Timestamp.valueOf(LocalDateTime.now()).toString()));
         }
         return new BookingResponseDto();
     }
